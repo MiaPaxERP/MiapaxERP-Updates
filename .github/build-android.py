@@ -13,9 +13,9 @@ run(tools/'d8','--min-api','26','--lib',platform,'--output',dex,build/'classes.j
 run(tools/'aapt2','compile','--dir',android/'res','-o',build/'res.zip')
 run(tools/'aapt2','link','-o',build/'unsigned.apk','-A',android/'assets','--manifest',android/'AndroidManifest.xml','-I',platform,build/'res.zip')
 with zipfile.ZipFile(build/'unsigned.apk','a',zipfile.ZIP_DEFLATED) as z:z.write(dex/'classes.dex','classes.dex')
-out=Path('release/android');out.mkdir(parents=True,exist_ok=True);apk=out/'MiaPaxERP-Mobil-v2.8.5-imzasiz.apk'
+out=Path('release/android');out.mkdir(parents=True,exist_ok=True);apk=out/'MiaPaxERP-Mobil-v2.8.6-imzasiz.apk'
 run(tools/'zipalign','-f','-p','4',build/'unsigned.apk',apk)
 run(tools/'zipalign','-c','4',apk)
 result=subprocess.check_output([str(tools/'aapt2'),'dump','badging',str(apk)],text=True)
-assert "versionCode='20805'" in result and "versionName='2.8.5'" in result
-print('Android 2.8.5 build and package verification passed; existing publisher signing remains required.')
+assert "versionCode='20806'" in result and "versionName='2.8.6'" in result
+print('Android 2.8.6 build and package verification passed; existing publisher signing remains required.')

@@ -10,7 +10,30 @@ on:
 permissions:
   contents: write
 jobs:
+  android-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Get exact source and patches
+        shell: bash
+        run: |
+          git init checkout
+          git -C checkout remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git -C checkout fetch --depth 1 origin "$GITHUB_SHA"
+          git -C checkout checkout --detach FETCH_HEAD
+          python -m zipfile -e checkout/source/MiaPaxERP-source.zip checkout/source
+          python -m zipfile -e checkout/source/MiaPaxERP-patch.zip checkout/source
+      - name: Build and verify Android package
+        shell: bash
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+          python checkout/.github/build-android.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-285-unsigned
+          path: release/android/MiaPaxERP-Mobil-v2.8.5-imzasiz.apk
+          if-no-files-found: error
   windows-sql-tls:
+    needs: android-build
     runs-on: windows-2025
     timeout-minutes: 25
     env:
@@ -29,6 +52,10 @@ jobs:
           if ($actual -ne $env:GITHUB_SHA) { throw 'Validation checkout mismatch' }
           Expand-Archive -LiteralPath checkout/source/MiaPaxERP-source.zip -DestinationPath checkout/source -Force
           Expand-Archive -LiteralPath checkout/source/MiaPaxERP-patch.zip -DestinationPath checkout/source -Force
+      - name: Restore pinned PDF renderer
+        run: python checkout/.github/restore-pdfjs.py
+      - name: Test irrigation alignment and PDF plan geometry
+        run: node --test checkout/source/MiapaxERP.Desktop/Assets/KrokiWeb/tests/designer.test.mjs
       - name: Start isolated SQL LocalDB
         shell: pwsh
         run: |
@@ -54,6 +81,10 @@ jobs:
       - name: Verify updater installation and rollback
         shell: pwsh
         run: dotnet run --project checkout/source/MiapaxERP.Tests.Guncelleme/MiapaxERP.Tests.Guncelleme.csproj --no-build -- checkout/source
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-285-unsigned
+          path: release/android
       - name: Build packages and publish validated main release
         shell: pwsh
         env:

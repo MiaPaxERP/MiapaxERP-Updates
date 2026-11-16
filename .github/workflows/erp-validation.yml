@@ -29,8 +29,8 @@ jobs:
           python checkout/.github/build-android.py
       - uses: actions/upload-artifact@v4
         with:
-          name: android-285-unsigned
-          path: release/android/MiaPaxERP-Mobil-v2.8.5-imzasiz.apk
+          name: android-286-unsigned
+          path: release/android/MiaPaxERP-Mobil-v2.8.6-imzasiz.apk
           if-no-files-found: error
   windows-sql-tls:
     needs: android-build
@@ -56,6 +56,8 @@ jobs:
         run: python checkout/.github/restore-pdfjs.py
       - name: Test irrigation alignment and PDF plan geometry
         run: node --test checkout/source/MiapaxERP.Desktop/Assets/KrokiWeb/tests/designer.test.mjs
+      - name: Test field map browser logic
+        run: node --test checkout/source/MiapaxERP.Tests.Saha/field286.test.mjs
       - name: Start isolated SQL LocalDB
         shell: pwsh
         run: |
@@ -83,7 +85,7 @@ jobs:
         run: dotnet run --project checkout/source/MiapaxERP.Tests.Guncelleme/MiapaxERP.Tests.Guncelleme.csproj --no-build -- checkout/source
       - uses: actions/download-artifact@v4
         with:
-          name: android-285-unsigned
+          name: android-286-unsigned
           path: release/android
       - name: Build packages and publish validated main release
         shell: pwsh

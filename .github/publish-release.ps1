@@ -27,10 +27,10 @@ foreach ($entry in @(@('MiapaxERP.Desktop','Masaustu'),@('MiapaxERP.MobileServer
 }
 Copy-Item "$source/MobilKurulum/*" "$out/" -Recurse -Force
 Copy-Item "$source/DEVELOPMENT_STATUS.md" "$out/OKU-ONCE.md"
-Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.8.5.zip"
+Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.8.6.zip"
 # Separate Ana/Yan updater payloads. Keep customer settings, signing files and PDBs out.
-$flat = "$out/MiaPaxERP-Yan-v2.8.5.zip"
-$ana = "$out/MiaPaxERP-Ana-v2.8.5.zip"
+$flat = "$out/MiaPaxERP-Yan-v2.8.6.zip"
+$ana = "$out/MiaPaxERP-Ana-v2.8.6.zip"
 $updateStage = Join-Path $out 'update-stage'
 New-Item -ItemType Directory -Force $updateStage | Out-Null
 foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
@@ -39,13 +39,13 @@ foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
  $destination=Join-Path $updateStage $relative;New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($destination)) | Out-Null;Copy-Item -LiteralPath $file.FullName -Destination $destination
 }
 # Role-specific instructions make independently downloadable artifacts explicit; channel setting stays on the PC.
-'YAN PC 2.8.5: HTTPS ana sunucu adresi ile kullanılır. Mevcut bağlantı ve kanal ayarları korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'YAN PC 2.8.6: HTTPS ana sunucu adresi ile kullanılır. Mevcut bağlantı ve kanal ayarları korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $flat
-'ANA PC 2.8.5: Mevcut SQL ve kanal ayarları korunur. HTTPS Windows hizmeti güncellemesi için tam Ana kurulum paketini kullanın.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'ANA PC 2.8.6: Mevcut SQL ve kanal ayarları korunur. HTTPS Windows hizmeti güncellemesi için tam Ana kurulum paketini kullanın.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $ana
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $flat -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $ana -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
-$freshSource = "$out/MiaPaxERP-Kaynak-v2.8.5.zip"
+$freshSource = "$out/MiaPaxERP-Kaynak-v2.8.6.zip"
 $sourceArchive = [IO.Compression.ZipFile]::Open($freshSource,[IO.Compression.ZipArchiveMode]::Create)
 try {
     foreach ($file in (Get-ChildItem -LiteralPath $source -Force -Recurse -File)) {
@@ -60,15 +60,15 @@ New-Item -ItemType Directory -Force $mobileStage | Out-Null
 Copy-Item "$source/MiapaxERP.Android/AndroidManifest.xml" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/Imzala.ps1" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/IMZALAMA-OKU.txt" "$mobileStage/"
-if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.8.5-imzasiz.apk")){throw 'Android build artifact missing'}
-Copy-Item "$out/android/MiaPaxERP-Mobil-v2.8.5-imzasiz.apk" "$mobileStage/"
-Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.8.5.zip"
-$assets = @($ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.8.5.zip", "$out/MiaPaxERP-Mobil-v2.8.5.zip")
+if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.8.6-imzasiz.apk")){throw 'Android build artifact missing'}
+Copy-Item "$out/android/MiaPaxERP-Mobil-v2.8.6-imzasiz.apk" "$mobileStage/"
+Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.8.6.zip"
+$assets = @($ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.8.6.zip", "$out/MiaPaxERP-Mobil-v2.8.6.zip")
 $lines = foreach ($file in $assets) { $hash = Get-FileHash -LiteralPath $file -Algorithm SHA256; "$($hash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($file))" }
 $lines | Set-Content "$out/SHA256SUMS.txt" -Encoding utf8
 if ($env:GITHUB_EVENT_NAME -ne 'push' -or $env:GITHUB_REF -ne 'refs/heads/main') { Write-Host 'Packages built and checksummed; release waits for main.'; exit 0 }
 $headers = @{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28'}
-$body = @{tag_name='v2.8.5';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.8.5 — Kroki PDF hizalama ve güncelleme onarımı';draft=$true;prerelease=$false;body='Ana ve Yan PC güncelleme ZIP dosyaları ayrıdır. Ana-Kurulum HTTPS sunucusunu da içerir. Mobil ZIP imzasız Android paketi ve mevcut anahtarla imzalama araçlarıdır; imzasız APK müşteri telefonuna kurulamaz. PDF üzerinde kroki, ölçekleme, elle sulama hizalama ve Google Maps anahtar ayarları eklendi. Google uydu/3D kendi Maps hesabı ve konum gerektirir. Windows x64 masaüstü ve ana HTTPS sunucusu. SQL/TLS ve işlem bütünlüğü testlerinden sonra üretildi. Ana/Yan otomatik güncelleme bildirimleri paket yüklemesinden sonra mevcut yayıncı anahtarıyla imzalanır. Kurmadan önce veritabanı yedeği alın. Mobil APK aynı imza anahtarıyla imzalanmadan dağıtılmamalıdır. E-belge sağlayıcı hesabı ve alan adı müşteri sunucusunda yapılandırılmalıdır. Ayrıntılar kaynak paketindeki DEVELOPMENT_STATUS.md dosyasındadır.'} | ConvertTo-Json
+$body = @{tag_name='v2.8.6';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.8.6 — Kroki PDF hizalama ve güncelleme onarımı';draft=$true;prerelease=$false;body='Ana ve Yan PC güncelleme ZIP dosyaları ayrıdır. Ana-Kurulum HTTPS sunucusunu da içerir. Mobil ZIP imzasız Android paketi ve mevcut anahtarla imzalama araçlarıdır; imzasız APK müşteri telefonuna kurulamaz. PDF üzerinde kroki, ölçekleme, elle sulama hizalama ve Google Maps anahtar ayarları eklendi. Google uydu/3D kendi Maps hesabı ve konum gerektirir. Windows x64 masaüstü ve ana HTTPS sunucusu. SQL/TLS ve işlem bütünlüğü testlerinden sonra üretildi. Ana/Yan otomatik güncelleme bildirimleri paket yüklemesinden sonra mevcut yayıncı anahtarıyla imzalanır. Kurmadan önce veritabanı yedeği alın. Mobil APK aynı imza anahtarıyla imzalanmadan dağıtılmamalıdır. E-belge sağlayıcı hesabı ve alan adı müşteri sunucusunda yapılandırılmalıdır. Ayrıntılar kaynak paketindeki DEVELOPMENT_STATUS.md dosyasındadır.'} | ConvertTo-Json
 $api = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases"
 $release = Invoke-RestMethod -Method Post -Uri $api -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
 foreach ($file in ($assets + "$out/SHA256SUMS.txt")) {

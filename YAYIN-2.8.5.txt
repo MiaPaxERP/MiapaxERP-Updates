@@ -1,0 +1,7 @@
+MiaPaxERP 2.8.5
+Ana ve Yan PC güncelleme paketleri ayrıdır. Ana-Kurulum ayrıca HTTPS Windows sunucusunu içerir.
+Mobil ZIP imzasız APK + Imzala.ps1 içerir. Mevcut Android anahtarıyla imzalanmadan müşteriye kurulabilir uygulama olarak dağıtılmamalıdır.
+Kroki: yerel PDF zemini ve sayfa seçimi, iki noktayla ölçek, elle sulama hizalama, kaynak işaretleme, Google Maps anahtar ayarları.
+Google uydu/3D için kullanıcıya ait API anahtarı, faturalandırma ve doğru koordinat referansı gerekir; henüz canlı Google kabul testi yapılmadı.
+Debug kopyası otomatik güncellenmez; Release kurulumu kullanılmalıdır.
+Tam SQL/TLS, updater ve paket denetimleri: Actions run 43878275500.

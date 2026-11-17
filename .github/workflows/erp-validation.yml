@@ -29,8 +29,8 @@ jobs:
           python checkout/.github/build-android.py
       - uses: actions/upload-artifact@v4
         with:
-          name: android-288-unsigned
-          path: release/android/MiaPaxERP-Mobil-v2.8.8-imzasiz.apk
+          name: android-289-unsigned
+          path: release/android/MiaPaxERP-Mobil-v2.8.9-imzasiz.apk
           if-no-files-found: error
   windows-sql-tls:
     needs: android-build
@@ -85,7 +85,7 @@ jobs:
         run: dotnet run --project checkout/source/MiapaxERP.Tests.Guncelleme/MiapaxERP.Tests.Guncelleme.csproj --no-build -- checkout/source
       - uses: actions/download-artifact@v4
         with:
-          name: android-288-unsigned
+          name: android-289-unsigned
           path: release/android
       - name: Build packages and publish validated main release
         shell: pwsh

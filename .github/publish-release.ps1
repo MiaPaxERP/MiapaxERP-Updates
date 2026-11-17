@@ -1,6 +1,8 @@
+param([string]$SourceDirectory='', [string]$ReleaseDirectory='', [string]$Compiler='')
 $ErrorActionPreference = 'Stop'
 $source = Join-Path $PSScriptRoot '../checkout/source'
 if (!(Test-Path $source)) { $source = Join-Path $env:GITHUB_WORKSPACE 'checkout/source' }
+if($SourceDirectory){$source=(Resolve-Path -LiteralPath $SourceDirectory).Path}
 # Restore unchanged static files from the hash-verified previous release.
 $legacy = Join-Path $env:RUNNER_TEMP 'MiapaxERP-2.8.1-static.zip'
 Invoke-WebRequest -Uri 'https://github.com/MiaPaxERP/MiapaxERP-Updates/releases/download/v2.8.1/MiapaxERP-Ana-v2.8.1.zip' -OutFile $legacy
@@ -20,6 +22,7 @@ foreach ($file in @('districts.geojson','provinces.geojson','places.json')) {
     if (!(Test-Path "$source/MiapaxERP.Desktop/Assets/SahaWeb/$file")) { throw "Missing required map: $file" }
 }
 $out = Join-Path $env:GITHUB_WORKSPACE 'release'
+if($ReleaseDirectory){$out=[IO.Path]::GetFullPath($ReleaseDirectory)}
 New-Item -ItemType Directory -Force $out | Out-Null
 foreach ($entry in @(@('MiapaxERP.Desktop','Masaustu'),@('MiapaxERP.MobileServer','Sunucu'))) {
     dotnet publish "$source/$($entry[0])/$($entry[0]).csproj" -c Release -r win-x64 --self-contained true --disable-build-servers -m:1 -p:NuGetAudit=false -o "$out/$($entry[1])"
@@ -27,10 +30,13 @@ foreach ($entry in @(@('MiapaxERP.Desktop','Masaustu'),@('MiapaxERP.MobileServer
 }
 Copy-Item "$source/MobilKurulum/*" "$out/" -Recurse -Force
 Copy-Item "$source/DEVELOPMENT_STATUS.md" "$out/OKU-ONCE.md"
-Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.8.8.zip"
+# Actual installers are required release assets; never install SQL Server or copy customer data.
+if(!$Compiler){$Compiler = & "$source/Setup/Get-Compiler.ps1" -ToolDirectory (Join-Path $env:RUNNER_TEMP 'miapax-inno')}
+& "$source/Setup/Build-Setup.ps1" -Payload $out -Output $out -ISCC $Compiler -Version '2.8.9' -Release
+Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.8.9.zip"
 # Separate Ana/Yan updater payloads. Keep customer settings, signing files and PDBs out.
-$flat = "$out/MiaPaxERP-Yan-v2.8.8.zip"
-$ana = "$out/MiaPaxERP-Ana-v2.8.8.zip"
+$flat = "$out/MiaPaxERP-Yan-v2.8.9.zip"
+$ana = "$out/MiaPaxERP-Ana-v2.8.9.zip"
 $updateStage = Join-Path $out 'update-stage'
 New-Item -ItemType Directory -Force $updateStage | Out-Null
 foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
@@ -39,13 +45,13 @@ foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
  $destination=Join-Path $updateStage $relative;New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($destination)) | Out-Null;Copy-Item -LiteralPath $file.FullName -Destination $destination
 }
 # Role-specific instructions make independently downloadable artifacts explicit; channel setting stays on the PC.
-'YAN PC 2.8.8: HTTPS ana sunucu adresi ile kullanılır. Mevcut bağlantı ve kanal ayarları korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'YAN PC 2.8.9: HTTPS ana sunucu adresi ile kullanÄ±lÄ±r. Mevcut baÄŸlantÄ± ve kanal ayarlarÄ± korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $flat
-'ANA PC 2.8.8: Mevcut SQL ve kanal ayarları korunur. HTTPS Windows hizmeti güncellemesi için tam Ana kurulum paketini kullanın.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'ANA PC 2.8.9: Mevcut SQL ve kanal ayarlarÄ± korunur. HTTPS Windows hizmeti gÃ¼ncellemesi iÃ§in tam Ana kurulum paketini kullanÄ±n.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $ana
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $flat -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $ana -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
-$freshSource = "$out/MiaPaxERP-Kaynak-v2.8.8.zip"
+$freshSource = "$out/MiaPaxERP-Kaynak-v2.8.9.zip"
 $sourceArchive = [IO.Compression.ZipFile]::Open($freshSource,[IO.Compression.ZipArchiveMode]::Create)
 try {
     foreach ($file in (Get-ChildItem -LiteralPath $source -Force -Recurse -File)) {
@@ -60,18 +66,18 @@ New-Item -ItemType Directory -Force $mobileStage | Out-Null
 Copy-Item "$source/MiapaxERP.Android/AndroidManifest.xml" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/Imzala.ps1" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/IMZALAMA-OKU.txt" "$mobileStage/"
-if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.8.8-imzasiz.apk")){throw 'Android build artifact missing'}
-Copy-Item "$out/android/MiaPaxERP-Mobil-v2.8.8-imzasiz.apk" "$mobileStage/"
-$signedApk="$source/MiapaxERP.Android/MiaPaxERP-Mobil-v2.8.8.apk"
+if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.8.9-imzasiz.apk")){throw 'Android build artifact missing'}
+Copy-Item "$out/android/MiaPaxERP-Mobil-v2.8.9-imzasiz.apk" "$mobileStage/"
+$signedApk="$source/MiapaxERP.Android/MiaPaxERP-Mobil-v2.8.9.apk"
 if(!(Test-Path $signedApk)){throw "Signed Android release missing"}
 Copy-Item $signedApk "$mobileStage/"
-Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.8.8.zip"
-$assets = @($signedApk, $ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.8.8.zip", "$out/MiaPaxERP-Mobil-v2.8.8.zip")
+Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.8.9.zip"
+$assets = @($signedApk, $ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.8.9.zip", "$out/MiaPaxERP-Mobil-v2.8.9.zip", "$out/MiaPaxERP-Ana-Setup-2.8.9.exe", "$out/MiaPaxERP-Yan-Setup-2.8.9.exe")
 $lines = foreach ($file in $assets) { $hash = Get-FileHash -LiteralPath $file -Algorithm SHA256; "$($hash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($file))" }
 $lines | Set-Content "$out/SHA256SUMS.txt" -Encoding utf8
 if ($env:GITHUB_EVENT_NAME -ne 'push' -or $env:GITHUB_REF -ne 'refs/heads/main') { Write-Host 'Packages built and checksummed; release waits for main.'; exit 0 }
 $headers = @{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28'}
-$body = @{tag_name='v2.8.8';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.8.8 — Mobil departmanlar, kamera barkodu ve güncelleme';draft=$true;prerelease=$false;body='Mobil bağlantı asistanı HTTPS, sertifika, servis ve aynı hesap kontrolüyle şehir dışı adresini hazırlar; DNS/modem kurulumu ana sunucuda yapılır. Mobilde ayrı erişim ve departman izinleri, kamera/elle barkodla ürün bulma ve bulunamazsa yetkili yeni stok kartı oluşturma, uygulama içi imzalı APK güncellemesi, mobil mesajlaşma ve bildirimler eklendi. Ana sayfa/takvim dahil yalnız atanmış ekranlar görünür. Lisans panelinden şirkete veya tüm etkin şirketlere duyurular ERP bildirimlerine imzalı ve tekilleştirilmiş aktarılır. Bekleyen iletişim, maliyet, kroki/3D/teklif ve barkod etiket geliştirmeleri dahildir. Ana ve Yan otomatik güncelleme ZIP dosyaları ayrıdır. Ana HTTPS hizmetini Ana-Kurulum ile aynı sürüme getirin. Mobil ZIP ve ayrıca mevcut yayıncı anahtarıyla imzalı APK yayımlanır. Eski mobil sürümden 2.8.8 bir defa APK ile kurulur; sonraki sürümlerde Güncelle düğmesi kullanılır ve Android kurulum onayı ister. Kullanıcı yetkilerinde Mobil erişim ve seçili departmanlar ayrıca atanmalıdır; normal ERP izni ve lisans da gerekir. Fiziksel telefon/kamera testi bu ortamda yapılamadı; gerçek çözücü ve imza testleri geçti. Kurmadan önce veritabanını yedekleyin. Yapay zekâ modeli ve dış HTTPS/domain/modem ayarı ana sunucuda yapılandırılır. Ayrıntılar DEVELOPMENT_STATUS.md içindedir.'} | ConvertTo-Json
+$body = @{tag_name='v2.8.9';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.8.9 — Satın alma, temiz kurulum ve güncelleme düzeltmesi';draft=$true;prerelease=$false;body='Satın alma evrakı depo ekranından girilir; depo/raf, parti ve stok hareketleri aynı işlemde güncellenir. Tekrarlı evrak ve hatalı kayıtta çift stok oluşması engellenir. Sipariş, mal kabul ve fatura eşleştirmesi korunur. SATIŞ ekranında cari/perakende, 0–20 KDV ve elle oran, üretilen stok görünümü; doğrulanan SQL yedeği ile tam sıfırlama ve tema okunurluğu geliştirmeleri dahildir. İlk kurulumda Admin/1234 bağlantı sihirbazı Windows veya SQL kimliğiyle boş veritabanını hazırlar; mevcut parolalar korunur ve ilk girişte güçlü parola istenir. Setuplar SQL Server motoru kurmaz. Ana ve Yan için ayrı Setup EXE, ayrı güncelleme ZIP, tam Ana kurulum ZIP ve mevcut yayıncı anahtarıyla imzalı mobil APK vardır. Güncelleyici yeniden açılış/çakışma durumlarını yönetir, onaylanan kurulumdan sonra uygulamayı yeniden açar ve başarısızlık nedenini gösterir. Eski sürümde güncelleme uygulanmıyorsa programı kapatıp ilgili yeni Setup EXE dosyasını mevcut kurulum klasörüne kurun. Ana PC kurulumu için erişilebilir SQL Server gerekir; HTTPS sunucusu güncellenirken hizmeti de aynı sürüme getirin. Kurmadan önce veritabanını yedekleyin. Ayrıntılar DEVELOPMENT_STATUS.md içindedir.'} | ConvertTo-Json
 $api = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases"
 $release = Invoke-RestMethod -Method Post -Uri $api -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
 foreach ($file in ($assets + "$out/SHA256SUMS.txt")) {

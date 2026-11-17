@@ -27,10 +27,10 @@ foreach ($entry in @(@('MiapaxERP.Desktop','Masaustu'),@('MiapaxERP.MobileServer
 }
 Copy-Item "$source/MobilKurulum/*" "$out/" -Recurse -Force
 Copy-Item "$source/DEVELOPMENT_STATUS.md" "$out/OKU-ONCE.md"
-Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.8.7.zip"
+Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.8.8.zip"
 # Separate Ana/Yan updater payloads. Keep customer settings, signing files and PDBs out.
-$flat = "$out/MiaPaxERP-Yan-v2.8.7.zip"
-$ana = "$out/MiaPaxERP-Ana-v2.8.7.zip"
+$flat = "$out/MiaPaxERP-Yan-v2.8.8.zip"
+$ana = "$out/MiaPaxERP-Ana-v2.8.8.zip"
 $updateStage = Join-Path $out 'update-stage'
 New-Item -ItemType Directory -Force $updateStage | Out-Null
 foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
@@ -39,13 +39,13 @@ foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
  $destination=Join-Path $updateStage $relative;New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($destination)) | Out-Null;Copy-Item -LiteralPath $file.FullName -Destination $destination
 }
 # Role-specific instructions make independently downloadable artifacts explicit; channel setting stays on the PC.
-'YAN PC 2.8.7: HTTPS ana sunucu adresi ile kullanılır. Mevcut bağlantı ve kanal ayarları korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'YAN PC 2.8.8: HTTPS ana sunucu adresi ile kullanılır. Mevcut bağlantı ve kanal ayarları korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $flat
-'ANA PC 2.8.7: Mevcut SQL ve kanal ayarları korunur. HTTPS Windows hizmeti güncellemesi için tam Ana kurulum paketini kullanın.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'ANA PC 2.8.8: Mevcut SQL ve kanal ayarları korunur. HTTPS Windows hizmeti güncellemesi için tam Ana kurulum paketini kullanın.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $ana
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $flat -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $ana -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
-$freshSource = "$out/MiaPaxERP-Kaynak-v2.8.7.zip"
+$freshSource = "$out/MiaPaxERP-Kaynak-v2.8.8.zip"
 $sourceArchive = [IO.Compression.ZipFile]::Open($freshSource,[IO.Compression.ZipArchiveMode]::Create)
 try {
     foreach ($file in (Get-ChildItem -LiteralPath $source -Force -Recurse -File)) {
@@ -60,18 +60,18 @@ New-Item -ItemType Directory -Force $mobileStage | Out-Null
 Copy-Item "$source/MiapaxERP.Android/AndroidManifest.xml" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/Imzala.ps1" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/IMZALAMA-OKU.txt" "$mobileStage/"
-if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.8.7-imzasiz.apk")){throw 'Android build artifact missing'}
-Copy-Item "$out/android/MiaPaxERP-Mobil-v2.8.7-imzasiz.apk" "$mobileStage/"
-$signedApk="$source/MiapaxERP.Android/MiaPaxERP-Mobil-v2.8.7.apk"
+if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.8.8-imzasiz.apk")){throw 'Android build artifact missing'}
+Copy-Item "$out/android/MiaPaxERP-Mobil-v2.8.8-imzasiz.apk" "$mobileStage/"
+$signedApk="$source/MiapaxERP.Android/MiaPaxERP-Mobil-v2.8.8.apk"
 if(!(Test-Path $signedApk)){throw "Signed Android release missing"}
 Copy-Item $signedApk "$mobileStage/"
-Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.8.7.zip"
-$assets = @($ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.8.7.zip", "$out/MiaPaxERP-Mobil-v2.8.7.zip")
+Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.8.8.zip"
+$assets = @($signedApk, $ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.8.8.zip", "$out/MiaPaxERP-Mobil-v2.8.8.zip")
 $lines = foreach ($file in $assets) { $hash = Get-FileHash -LiteralPath $file -Algorithm SHA256; "$($hash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($file))" }
 $lines | Set-Content "$out/SHA256SUMS.txt" -Encoding utf8
 if ($env:GITHUB_EVENT_NAME -ne 'push' -or $env:GITHUB_REF -ne 'refs/heads/main') { Write-Host 'Packages built and checksummed; release waits for main.'; exit 0 }
 $headers = @{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28'}
-$body = @{tag_name='v2.8.7';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.8.7 — Barkod etiketleri, üretim maliyeti ve ekip iletişimi';draft=$true;prerelease=$false;body='Stok kartı ve paketlenmiş üretimde özel mm ölçülü Code128 etiketleri; paket içeriği, ürün özellikleri ve hızlı satışta paket adedi. Çoklu barkod, atomik hızlı satış, üretim/paketleme PDF, ayrıntılı düzenlenebilir maliyet ve günlük bildirim, kullanıcı/departman mesajlaşma, yetkili duyuru, modül süreleri/7 günlük uyarı, donanım-sorun yenilemesi, güncel haberler ve HTTPS ağ keşfi. Önceki yayımlanmamış kroki/3D/teklif geliştirmeleri dahildir. Ana ve Yan otomatik güncelleme paketleri ayrıdır; HTTPS hizmeti için Ana-Kurulum kullanılır. Mobil ZIP mevcut Android yayıncı anahtarıyla imzalı APK içerir. LisansPanelleri kaynakları ve 0005 geçişi kaynak paketindedir; panel sunucularına ayrıca kurulmalıdır. Yapay zekâ için Ollama/MiaPax modeli, dış erişim için güvenilir HTTPS alan adı ve modem ayarı gerekir. Eksik maliyetler sıfır sayılmaz. Yeni izinleri Admin atamalıdır. Fiziksel termal yazıcıyla saha kabulü gerekir. Veritabanınızı yedekleyin; ana hizmet ve yan cihazları aynı sürüme güncelleyin. Ayrıntılar DEVELOPMENT_STATUS.md içindedir.'} | ConvertTo-Json
+$body = @{tag_name='v2.8.8';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.8.8 — Mobil departmanlar, kamera barkodu ve güncelleme';draft=$true;prerelease=$false;body='Mobil bağlantı asistanı HTTPS, sertifika, servis ve aynı hesap kontrolüyle şehir dışı adresini hazırlar; DNS/modem kurulumu ana sunucuda yapılır. Mobilde ayrı erişim ve departman izinleri, kamera/elle barkodla ürün bulma ve bulunamazsa yetkili yeni stok kartı oluşturma, uygulama içi imzalı APK güncellemesi, mobil mesajlaşma ve bildirimler eklendi. Ana sayfa/takvim dahil yalnız atanmış ekranlar görünür. Lisans panelinden şirkete veya tüm etkin şirketlere duyurular ERP bildirimlerine imzalı ve tekilleştirilmiş aktarılır. Bekleyen iletişim, maliyet, kroki/3D/teklif ve barkod etiket geliştirmeleri dahildir. Ana ve Yan otomatik güncelleme ZIP dosyaları ayrıdır. Ana HTTPS hizmetini Ana-Kurulum ile aynı sürüme getirin. Mobil ZIP ve ayrıca mevcut yayıncı anahtarıyla imzalı APK yayımlanır. Eski mobil sürümden 2.8.8 bir defa APK ile kurulur; sonraki sürümlerde Güncelle düğmesi kullanılır ve Android kurulum onayı ister. Kullanıcı yetkilerinde Mobil erişim ve seçili departmanlar ayrıca atanmalıdır; normal ERP izni ve lisans da gerekir. Fiziksel telefon/kamera testi bu ortamda yapılamadı; gerçek çözücü ve imza testleri geçti. Kurmadan önce veritabanını yedekleyin. Yapay zekâ modeli ve dış HTTPS/domain/modem ayarı ana sunucuda yapılandırılır. Ayrıntılar DEVELOPMENT_STATUS.md içindedir.'} | ConvertTo-Json
 $api = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases"
 $release = Invoke-RestMethod -Method Post -Uri $api -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
 foreach ($file in ($assets + "$out/SHA256SUMS.txt")) {

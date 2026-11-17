@@ -22,6 +22,7 @@ jobs:
           git -C checkout checkout --detach FETCH_HEAD
           python -m zipfile -e checkout/source/MiaPaxERP-source.zip checkout/source
           python -m zipfile -e checkout/source/MiaPaxERP-patch.zip checkout/source
+          python -m zipfile -e checkout/source/MiaPaxERP-fix.zip checkout/source
       - name: Build and verify Android package
         shell: bash
         run: |
@@ -52,6 +53,7 @@ jobs:
           if ($actual -ne $env:GITHUB_SHA) { throw 'Validation checkout mismatch' }
           Expand-Archive -LiteralPath checkout/source/MiaPaxERP-source.zip -DestinationPath checkout/source -Force
           Expand-Archive -LiteralPath checkout/source/MiaPaxERP-patch.zip -DestinationPath checkout/source -Force
+          Expand-Archive -LiteralPath checkout/source/MiaPaxERP-fix.zip -DestinationPath checkout/source -Force
       - name: Restore pinned PDF renderer
         run: python checkout/.github/restore-pdfjs.py
       - name: Test irrigation alignment and PDF plan geometry

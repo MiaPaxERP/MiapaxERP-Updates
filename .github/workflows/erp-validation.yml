@@ -35,6 +35,20 @@ jobs:
           name: android-290-unsigned
           path: release/android/MiaPaxERP-Mobil-v2.9.0-imzasiz.apk
           if-no-files-found: warn
+      # İmzasız APK'yı yayıncının yerel imzalaması için ayrı bir dala da koyar (artefakt indirmesi oturum gerektirir).
+      - name: Share unsigned APK for publisher signing
+        if: always() && github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          f=release/android/MiaPaxERP-Mobil-v2.9.0-imzasiz.apk
+          [ -f "$f" ] || exit 0
+          git init -q apk-share && cp "$f" apk-share/ && cd apk-share
+          sha256sum *.apk > SHA256SUMS.txt
+          git -c user.name=github-actions -c user.email=actions@github.com checkout -q -b android-imzasiz
+          git add . && git -c user.name=github-actions -c user.email=actions@github.com commit -qm "Unsigned Android build of $GITHUB_SHA"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/android-imzasiz
   windows-sql-tls:
     needs: android-build
     runs-on: windows-2025

@@ -33,7 +33,7 @@ jobs:
         if: always()
         with:
           name: android-291-unsigned
-          path: release/android/MiaPaxERP-Mobil-v2.9.1-imzasiz.apk
+          path: release/android/MiaPaxERP-Mobil-v2.9.2-imzasiz.apk
           if-no-files-found: warn
       # İmzasız APK'yı yayıncının yerel imzalaması için ayrı bir dala da koyar (artefakt indirmesi oturum gerektirir).
       - name: Share unsigned APK for publisher signing
@@ -42,7 +42,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          f=release/android/MiaPaxERP-Mobil-v2.9.1-imzasiz.apk
+          f=release/android/MiaPaxERP-Mobil-v2.9.2-imzasiz.apk
           [ -f "$f" ] || exit 0
           git init -q apk-share && cp "$f" apk-share/ && cd apk-share
           sha256sum *.apk > SHA256SUMS.txt
@@ -73,7 +73,7 @@ jobs:
       - name: Restore pinned PDF renderer
         run: python checkout/.github/restore-pdfjs.py
       - name: Test irrigation alignment and PDF plan geometry
-        run: node --test checkout/source/MiapaxERP.Desktop/Assets/KrokiWeb/tests/designer.test.mjs
+        run: node --test checkout/source/MiapaxERP.Desktop/Assets/KrokiWeb/tests/designer.test.mjs checkout/source/MiapaxERP.Desktop/Assets/KrokiWeb/tests/ai-project.test.mjs checkout/source/MiapaxERP.Desktop/Assets/KrokiWeb/tests/kroki-cap.test.mjs
       - name: Test field map browser logic
         run: node --test checkout/source/MiapaxERP.Tests.Saha/field286.test.mjs
       - name: Start isolated SQL LocalDB

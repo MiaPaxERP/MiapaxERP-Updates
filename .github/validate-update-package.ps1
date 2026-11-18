@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Archive,[Parameter(Mandatory=$true)][string]$Desktop,[string]$Version='2.9.1.0')
+param([Parameter(Mandatory=$true)][string]$Archive,[Parameter(Mandatory=$true)][string]$Desktop,[string]$Version='2.9.2.0')
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 if((Get-Item -LiteralPath $Archive).Length -gt 500MB){throw 'Updater package exceeds the old client 500 MiB limit'}
@@ -13,6 +13,6 @@ try{
   # Keep the OLD updater policy unchanged: current package must install through existing clients.
   if(@($parts|Where-Object {$_ -in @('Data','UserData')}).Count -or $name -in @('MiapaxERP.guncelleme.json','BoruERP.guncelleme.json','MiaSoft.guncelleme.json','ag-baglantisi.json') -or ($name -match 'lisans' -and $ext -cne '.dll') -or $ext -in @('.db','.sqlite','.sqlite3','.mdf','.ldf','.bak','.pem','.pfx','.dpapi','.pdb')){throw "Old updater rejects payload: $rel"}
  }
- foreach($required in @('Assets/KrokiWeb/js/field-plan-designer.mjs','Assets/KrokiWeb/lib/pdfjs/build/pdf.mjs','Assets/KrokiWeb/lib/pdfjs/build/pdf.worker.mjs')){if(!$zip.GetEntry($required)){throw "Kroki payload missing: $required"}}
+ foreach($required in @('Assets/KrokiWeb/js/field-plan-designer.mjs','Assets/KrokiWeb/ai-proje.html','Assets/KrokiWeb/js/ai-project.mjs','Assets/KrokiWeb/lib/pdfjs/build/pdf.mjs','Assets/KrokiWeb/lib/pdfjs/build/pdf.worker.mjs')){if(!$zip.GetEntry($required)){throw "Kroki payload missing: $required"}}
  Write-Host "PASS old updater archive rules, root EXE, version, PDF assets and size: $Archive"
 }finally{$zip.Dispose()}

@@ -32,8 +32,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: android-290-unsigned
-          path: release/android/MiaPaxERP-Mobil-v2.9.0-imzasiz.apk
+          name: android-291-unsigned
+          path: release/android/MiaPaxERP-Mobil-v2.9.1-imzasiz.apk
           if-no-files-found: warn
       # İmzasız APK'yı yayıncının yerel imzalaması için ayrı bir dala da koyar (artefakt indirmesi oturum gerektirir).
       - name: Share unsigned APK for publisher signing
@@ -42,7 +42,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          f=release/android/MiaPaxERP-Mobil-v2.9.0-imzasiz.apk
+          f=release/android/MiaPaxERP-Mobil-v2.9.1-imzasiz.apk
           [ -f "$f" ] || exit 0
           git init -q apk-share && cp "$f" apk-share/ && cd apk-share
           sha256sum *.apk > SHA256SUMS.txt
@@ -103,7 +103,7 @@ jobs:
         run: dotnet run --project checkout/source/MiapaxERP.Tests.Guncelleme/MiapaxERP.Tests.Guncelleme.csproj --no-build -- checkout/source
       - uses: actions/download-artifact@v4
         with:
-          name: android-290-unsigned
+          name: android-291-unsigned
           path: release/android
       - name: Build packages and publish validated main release
         shell: pwsh

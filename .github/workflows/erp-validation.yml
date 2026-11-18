@@ -28,11 +28,13 @@ jobs:
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
           python checkout/.github/build-android.py
+      # İmzasız APK, imza doğrulaması başarısız olsa da indirilebilsin: yayıncı yerelde Imzala.ps1 ile imzalar.
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: android-289-unsigned
-          path: release/android/MiaPaxERP-Mobil-v2.8.9-imzasiz.apk
-          if-no-files-found: error
+          name: android-290-unsigned
+          path: release/android/MiaPaxERP-Mobil-v2.9.0-imzasiz.apk
+          if-no-files-found: warn
   windows-sql-tls:
     needs: android-build
     runs-on: windows-2025
@@ -87,7 +89,7 @@ jobs:
         run: dotnet run --project checkout/source/MiapaxERP.Tests.Guncelleme/MiapaxERP.Tests.Guncelleme.csproj --no-build -- checkout/source
       - uses: actions/download-artifact@v4
         with:
-          name: android-289-unsigned
+          name: android-290-unsigned
           path: release/android
       - name: Build packages and publish validated main release
         shell: pwsh

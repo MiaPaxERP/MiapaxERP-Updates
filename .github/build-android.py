@@ -17,13 +17,13 @@ run(tools/'d8','--min-api','26','--lib',platform,'--output',dex,build/'classes.j
 run(tools/'aapt2','compile','--dir',android/'res','-o',build/'res.zip')
 run(tools/'aapt2','link','-o',build/'unsigned.apk','-A',android/'assets','--manifest',android/'AndroidManifest.xml','-I',platform,build/'res.zip')
 with zipfile.ZipFile(build/'unsigned.apk','a',zipfile.ZIP_DEFLATED) as z:z.write(dex/'classes.dex','classes.dex')
-out=Path('release/android');out.mkdir(parents=True,exist_ok=True);apk=out/'MiaPaxERP-Mobil-v2.8.9-imzasiz.apk'
+out=Path('release/android');out.mkdir(parents=True,exist_ok=True);apk=out/'MiaPaxERP-Mobil-v2.9.0-imzasiz.apk'
 run(tools/'zipalign','-f','-p','4',build/'unsigned.apk',apk)
 run(tools/'zipalign','-c','4',apk)
 result=subprocess.check_output([str(tools/'aapt2'),'dump','badging',str(apk)],text=True)
-assert "versionCode='20809'" in result and "versionName='2.8.9'" in result
-print('Android 2.8.9 build and package verification passed; existing publisher signing remains required.')
-signed=android/'MiaPaxERP-Mobil-v2.8.9.apk'
+assert "versionCode='20900'" in result and "versionName='2.9.0'" in result
+print('Android 2.9.0 build and package verification passed; existing publisher signing remains required.')
+signed=android/'MiaPaxERP-Mobil-v2.9.0.apk'
 certs=subprocess.check_output([str(java/'java'),'-jar',str(tools/'lib/apksigner.jar'),'verify','--verbose','--print-certs',str(signed)],text=True)
 assert '1b4c863df87d104a36744ab4587bd67ad0b185a0535e7a56d7ace3516e897f7a' in certs, 'Existing Android publisher identity mismatch'
 with zipfile.ZipFile(apk) as fresh,zipfile.ZipFile(signed) as checked:
@@ -32,5 +32,5 @@ with zipfile.ZipFile(apk) as fresh,zipfile.ZipFile(signed) as checked:
         if name.startswith('assets/') and not name.endswith('/'):
             assert fresh.read(name)==checked.read(name),'Signed APK asset mismatch: '+name
 badging=subprocess.check_output([str(tools/'aapt2'),'dump','badging',str(signed)],text=True)
-assert "versionCode='20809'" in badging and "versionName='2.8.9'" in badging
-print('Existing publisher Android v2/v3 signature, compiled DEX and 2.8.9 version verified.')
+assert "versionCode='20900'" in badging and "versionName='2.9.0'" in badging
+print('Existing publisher Android v2/v3 signature, compiled DEX and 2.9.0 version verified.')

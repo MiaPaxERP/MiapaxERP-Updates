@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Archive,[Parameter(Mandatory=$true)][string]$Desktop,[string]$Version='2.9.4.0')
+param([Parameter(Mandatory=$true)][string]$Archive,[Parameter(Mandatory=$true)][string]$Desktop,[string]$Version='2.9.5.0')
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 if((Get-Item -LiteralPath $Archive).Length -gt 500MB){throw 'Updater package exceeds the old client 500 MiB limit'}

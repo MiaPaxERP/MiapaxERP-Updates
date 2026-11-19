@@ -5,6 +5,7 @@ on:
     paths:
       - 'source/**'
       - '.github/**'
+      - 'YAYIN_ONAYI.txt'
   pull_request:
   workflow_dispatch:
 permissions:

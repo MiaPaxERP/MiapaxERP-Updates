@@ -106,6 +106,7 @@ jobs:
           name: android-291-unsigned
           path: release/android
       - name: Build packages and publish validated main release
+        if: hashFiles('checkout/YAYIN_ONAYI.txt') != ''
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

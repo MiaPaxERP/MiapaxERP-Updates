@@ -93,7 +93,13 @@ jobs:
         continue-on-error: true
         timeout-minutes: 20
         shell: pwsh
-        run: dotnet run --project checkout/source/MiapaxERP.Tests.UzakCalisma/MiapaxERP.Tests.UzakCalisma.csproj --no-build -- --tema-render "$env:RUNNER_TEMP/tema-goruntuleri"
+        run: |
+          # Her tema ayrı süreçte çizilir; biri takılırsa diğerleri etkilenmez.
+          $out = Join-Path $env:RUNNER_TEMP 'tema-goruntuleri'
+          foreach ($t in 'Nane Cam','Okyanus Cam','Lavanta Cam','Gün Batımı Cam','Gece Cam','Açık','Doğal') {
+            $p = Start-Process dotnet -ArgumentList @('run','--project','checkout/source/MiapaxERP.Tests.UzakCalisma/MiapaxERP.Tests.UzakCalisma.csproj','--no-build','--','--tema-render',"`"$out`"","`"$t`"") -NoNewWindow -PassThru
+            if (-not $p.WaitForExit(150000)) { try { $p.Kill($true) } catch {}; Write-Host "ZAMAN ASIMI $t" }
+          }
       - name: Upload theme screenshots
         if: always()
         continue-on-error: true

@@ -91,7 +91,7 @@ jobs:
         run: dotnet build checkout/source/MiapaxERP.slnx --disable-build-servers -m:1 -p:NuGetAudit=false
       - name: Render theme screenshots
         continue-on-error: true
-        timeout-minutes: 6
+        timeout-minutes: 14
         shell: pwsh
         run: dotnet run --project checkout/source/MiapaxERP.Tests.UzakCalisma/MiapaxERP.Tests.UzakCalisma.csproj --no-build -- --tema-render "$env:RUNNER_TEMP/tema-goruntuleri"
       - name: Upload theme screenshots
@@ -102,6 +102,22 @@ jobs:
           name: tema-goruntuleri
           path: ${{ runner.temp }}/tema-goruntuleri
           if-no-files-found: ignore
+      # Görüntüler yayıncının inceleyebilmesi için ayrı bir dala da konur (müşteri verisi içermez; SQL'siz önizleme).
+      - name: Share theme screenshots
+        if: always() && github.event_name == 'push'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $d = Join-Path $env:RUNNER_TEMP 'tema-goruntuleri'
+          if (-not (Test-Path $d)) { exit 0 }
+          Set-Location $d
+          git init -q
+          git -c user.name=github-actions -c user.email=actions@github.com checkout -q -b tema-goruntuleri
+          git add .
+          git -c user.name=github-actions -c user.email=actions@github.com commit -qm "Theme screenshots of $env:GITHUB_SHA"
+          git push -q --force "https://x-access-token:$($env:GH_TOKEN)@github.com/$($env:GITHUB_REPOSITORY).git" HEAD:refs/heads/tema-goruntuleri
       - name: Run rules, UI rendering, real TLS and isolated SQL transactions
         shell: pwsh
         run: dotnet test checkout/source/MiapaxERP.Tests.HTTPS.Integration/MiapaxERP.Tests.HTTPS.Integration.csproj --no-restore --disable-build-servers -m:1 -p:NuGetAudit=false --logger 'console;verbosity=normal'

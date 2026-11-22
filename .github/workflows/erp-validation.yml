@@ -52,6 +52,8 @@ jobs:
           git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/android-imzasiz
   windows-sql-tls:
     needs: android-build
+    # Geliştirme sırasında imzalı APK henüz yokken de Windows derleme/testleri çalışsın; yayın yine Android onayı ister.
+    if: ${{ !cancelled() }}
     runs-on: windows-2025
     timeout-minutes: 25
     env:
@@ -87,6 +89,18 @@ jobs:
       - name: Build the complete solution
         shell: pwsh
         run: dotnet build checkout/source/MiapaxERP.slnx --disable-build-servers -m:1 -p:NuGetAudit=false
+      - name: Render theme screenshots
+        continue-on-error: true
+        shell: pwsh
+        run: dotnet run --project checkout/source/MiapaxERP.Tests.UzakCalisma/MiapaxERP.Tests.UzakCalisma.csproj --no-build -- --tema-render "$env:RUNNER_TEMP/tema-goruntuleri"
+      - name: Upload theme screenshots
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: tema-goruntuleri
+          path: ${{ runner.temp }}/tema-goruntuleri
+          if-no-files-found: ignore
       - name: Run rules, UI rendering, real TLS and isolated SQL transactions
         shell: pwsh
         run: dotnet test checkout/source/MiapaxERP.Tests.HTTPS.Integration/MiapaxERP.Tests.HTTPS.Integration.csproj --no-restore --disable-build-servers -m:1 -p:NuGetAudit=false --logger 'console;verbosity=normal'
@@ -107,7 +121,7 @@ jobs:
           name: android-291-unsigned
           path: release/android
       - name: Build packages and publish validated main release
-        if: hashFiles('checkout/YAYIN_ONAYI.txt') != ''
+        if: needs.android-build.result == 'success' && hashFiles('checkout/YAYIN_ONAYI.txt') != ''
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

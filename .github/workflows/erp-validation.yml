@@ -91,6 +91,7 @@ jobs:
         run: dotnet build checkout/source/MiapaxERP.slnx --disable-build-servers -m:1 -p:NuGetAudit=false
       - name: Render theme screenshots
         continue-on-error: true
+        timeout-minutes: 6
         shell: pwsh
         run: dotnet run --project checkout/source/MiapaxERP.Tests.UzakCalisma/MiapaxERP.Tests.UzakCalisma.csproj --no-build -- --tema-render "$env:RUNNER_TEMP/tema-goruntuleri"
       - name: Upload theme screenshots

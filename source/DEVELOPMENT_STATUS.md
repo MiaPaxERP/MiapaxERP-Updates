@@ -1,5 +1,18 @@
 # MiaPaxERP — geliştirme kaydı, 18 Kasım 2026
 
+## Yayımlanmamış (2.9.9 adayı) — 23 Kasım 2026
+
+- Kullanıcı silme: Kullanıcı ve Yetkiler → "🗑 Kullanıcıyı Sil". Hesap listeden kalkar, giriş yapamaz, kullanıcı adı yeniden kullanılabilir; geçmiş belgelerde adı korunur (satır fiziksel silinmez, `~silindi~` önekiyle arşivlenir). Kendi hesabınız ve son aktif yönetici silinemez. HTTPS: `YardimciEkranServisi.KullaniciSil`.
+- Üretim: "✎ Emri Düzenle" ve "🗑 Emri Sil" yanlış başlatılan (Üretimde) emirde de çalışır. Önce "başlatmayı geri al" yapılır: gün içinde stoğa giren sağlam ürün ters kayıtla düşülür, sabitlenen reçete kaldırılır, emir Planlandı olur. Paketlenmiş veya stoklara işlenmiş emirde yapılmaz. "Emri İptal Et" de aynı akışı kullanır. HTTPS: `EskiUretimServisi.BaslatmayiGeriAl`.
+- İş takvimi: "✓ Tamamlandı", "✎ Düzenle", "İptal et", "🗑 Sil" düğmeleri; çift tıkla düzenleme, sağ tık menüsü. HTTPS: `TakvimGetir`, `TakvimGuncelle`, `TakvimSil`.
+- Bugün yapılacaklar: rol/yetki ve takvime göre öncelikli günlük görevler (ay sonu kapanışı, KDV 28'i, muhtasar 26'sı, geçici vergi, Ba-Bs; bordro/puantaj; ay sonu ve ön sayım; teslimi yaklaşan satın alma siparişleri için mal kabul hazırlığı; bugün başlayacak üretim; bugün vadeli ödeme ve çek/senet; bugünkü takvim planları). Ana sayfada "📌 Bugün yapılacaklar" kartı ve 💡 Öneriler penceresinin başında. HTTPS: `AkilliDenetimServisi.BugunYapilacaklar`.
+- Temaya göre pano: her tema kendi widget setini gösterir — Nane Cam ekip + istatistik, Okyanus Cam finans akışı, Lavanta Cam görev panosu, Gün Batımı Cam satış vitrini, Gece Cam üretim kontrol odası, VIP yönetici özeti, Eskitme/Klasik defter görünümü, Doğal/Kültürel günün akışı, Modern/Yenilikçi/Canlı gösterge ızgarası. Veri `PanoOzetiServisi.Oku` ile yetkiye göre okunur.
+- Kroki → Arazi Stüdyosu (tek ekran, `Assets/KrokiWeb/arazi.html`): adres/koordinat arama (OpenStreetMap Nominatim), Esri uydu üzerinde tarla çizimi (köşe veya ölçüyle), su kaynağı, ana/dağıtım/hat borusu, yağmurlama başlığı ve 14 çeşit ek parçanın elle eklenmesi (boruya otomatik oturur), seç/taşı/sil, tarlayı borularla birlikte taşıma, geri al; otomatik yerleşim (mevcut hesap motoru); 3D uydu görünümü (uydu dokusu gerçek arazi yüksekliğine giydirilir); toprak (ISRIC SoilGrids: pH, tekstür, organik madde, N, KDK, WRB), meteoroloji (Open-Meteo 7 gün + son 12 ay), eğim (Copernicus DEM) ve ürüne göre sulama ihtiyacı; stok fiyatlı malzeme listesi; yapay zekâ ile anlatımdan adres → tarla → kaynak → borular → analiz → fiyat (sunucu yoksa yerleşik çözümleyici). PDF: yukarıdan ve 3D uydu görünümü, malzeme/teklif, en altta analiz. Önceki planlayıcı ve AI sihirbazı "Klasik araçlar"dan açılır. Testler: `tests/arazi.test.mjs`.
+- Not: Esri World Imagery ticari kullanımda Esri koşullarına tabidir; raporda kaynak atıfları yer alır.
+- Saha pazarlama: müşteri kartında "🗑 Müşteriyi sil" (masaüstü ve telefon; görüşmeler ve geçmişle birlikte, sürüm kontrollü; WhatsApp gönderim kayıtları korunur, müşteri bağı boşaltılır). HTTPS `SahaServisi.Sil`, mobil `delete`.
+- Saha pazarlama: kart güncellenince değişen alanlar ("Tarla: 10 dekar → 12 dekar") tarih ve kullanıcı adıyla `BERP299_SahaGecmis` tablosuna yazılır; kartın zaman çizelgesinde görüşmelerle birlikte, il listesinde "son işlem" olarak görünür. Rapor tarih aralığına o aralıkta eklenen, güncellenen veya görüşülen müşteriler girer; "Son işlem" sütunu eklendi. Test: `SahaGecmisSqlTestleri`.
+- Mobil tema: koyu tema sayfayı `filter:invert` ile ters çevirmiyor (bazı Android WebView'ler yazıyı çizmiyordu); açık ve koyu tema için her öğenin zemin/yazı rengi açıkça tanımlı, telefonun koyu/açık modundan etkilenmez. Telefona ulaşması için yeni APK gerekir.
+
 ## 2.9.2 — birim fiyat ve KDV, makine yönetimi, kroki AI proje sihirbazı, modül modül lisans (yayımlanıyor)
 
 - Birim fiyat ve KDV (StokFiyatKdvServisi/Penceresi): mevcut ve üretilen stoklarda alış fiyatı (KDV dahil/hariç), bayi ve perakende fiyatı, KDV oranı %0/%1/%10/%20 (varsayılan %20). Tablo MPXNext_StokKdv (Sema.sql, ModullerNext.sql, çalışma anında idempotent). Girişler: Satış/Üretilen stok panelinde "Birim fiyat ve KDV" ve stok menüsünde "Birim fiyat ve KDV listesi". Kroki teklif stok aramasına KDV oranı ve dahil/hariç bilgisi taşındı.
@@ -28,6 +41,17 @@
   - Firma bilgileri: eklenen PDF'ten unvan, VKN/TCKN, vergi dairesi, MERSİS, sicil, NACE, IBAN, iletişim ve adres boş alanlara doldurulur (pdf.js, bağlantısız).
   - Temalar: koyu temalarda sabit açık zeminler koyulaştırılır, sekme değişiminde okunurluk yeniden denetlenir.
   - Dil: Ayarlar'da Türkçe, English, Deutsch, Français, Русский, العربية (sağdan sola), 中文. Menüler ve sık kullanılan ekran metinleri yerleşik sözlükten (Diller/ceviri.tsv, ~330 metin) çevrilir; sözlükte olmayanlar yapay zekâ bağlantısıyla tamamlanıp %LOCALAPPDATA%\MiapaxERP\Ceviri altında saklanabilir. Kayıt verileri çevrilmez.
+  - 19 Kasım 2026 (sürüm 2.9.5): lisans başına mobil cihaz sayısı (panellerde 📱 düğmesi, license_mobile tablosu, imzalı lisansta mobileDevices); eşlemede sınır denetimi ve gerçek hata nedeni (403 mesajı telefona iletilir); mobil uzak bağlantı sonucu penceresi. Not: internet paneli kodu canlıya ayrıca dağıtılmalıdır.
+  - 19 Kasım 2026 öğleden sonra (sürüm 2.9.4): yan PC açılışı (kısayol --https-client, kayıtlı sunucuda ayar ekranı atlanır), son dakika bandı, lisans duyuruları 10 dk, mobil tema/yazı boyutu ayarı, Kroki ve mobil açılır liste renkleri.
+  - 19 Kasım 2026 ek düzeltmeler (sürüm 2.9.3):
+    - Mobil: masaüstünde sade 3 adımlı bağlantı ekranı, dış IP (otomatik bulma, port, sertifikada dış IP), yerel/dış adres yedekli eşleme kodu (BERP-LAN1 v2 "alt"), "Yapay zekâ ile denetle ve düzelt"; telefonda sade bağlantı ekranı, nedenini gösteren bildirim kutucuğu, "Hesap değiştir", kod yoksa yapıştırma penceresi, telefon bildirimleri (60 sn), iş takvimi, bildirimler okundu işareti, çevrimdışı önbellek genişletildi.
+    - Mobil harita: provinces.geojson / districts.geojson APK'ya geri eklendi (kaynak arşivinde eksikti).
+    - "Mobil kullanıcılar" departmanı etkin mobil hesaplarla otomatik eşitlenir; duyuru/mesaj bu departmana gönderilebilir.
+    - Üretilen ürünler stoku: üretim emirlerinden gelen girişler (tamamlama ve günlük kayıt) de listelenir.
+    - Yapay zekâ: OpenAI uyumlu ve Anthropic Claude sağlayıcıları (API anahtarı DPAPI ile şifreli).
+    - Tema: tema değişince yazı renkleri özgün renkten yeniden hesaplanır.
+    - Dil: etkin pencere 3 sn'de bir yeniden çevrilir; yapay zekâ ayarlıysa eksik metinler arka planda çevrilir.
+    - Yayın yalnız depo kökünde YAYIN_ONAYI.txt varken yapılır.
   - Raporlar: kod ve uzak katalog doğrulandı; ekran RAPOR lisans modülü ister. Sorun sürerse hata metni gerekli.
 - Testler: kroki AI motoru 8/8 (node), internet paneli 51 + 28, yerel panel geçti. Makine okuyucuları için sahte Modbus, MQTT ve OPC UA sunucularıyla entegrasyon testleri eklendi; .NET derlemesi ve testler CI'da.
 

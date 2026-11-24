@@ -32,11 +32,11 @@ Copy-Item "$source/MobilKurulum/*" "$out/" -Recurse -Force
 Copy-Item "$source/DEVELOPMENT_STATUS.md" "$out/OKU-ONCE.md"
 # Actual installers are required release assets; never install SQL Server or copy customer data.
 if(!$Compiler){$Compiler = & "$source/Setup/Get-Compiler.ps1" -ToolDirectory (Join-Path $env:RUNNER_TEMP 'miapax-inno')}
-& "$source/Setup/Build-Setup.ps1" -Payload $out -Output $out -ISCC $Compiler -Version '2.9.9' -Release
-Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.9.9.zip"
+& "$source/Setup/Build-Setup.ps1" -Payload $out -Output $out -ISCC $Compiler -Version '2.9.10' -Release
+Compress-Archive -Path "$out/Masaustu","$out/Sunucu","$out/*.ps1","$out/*.cmd","$out/*.ornek","$out/OKU-ONCE.md" -DestinationPath "$out/MiaPaxERP-Ana-Kurulum-v2.9.10.zip"
 # Separate Ana/Yan updater payloads. Keep customer settings, signing files and PDBs out.
-$flat = "$out/MiaPaxERP-Yan-v2.9.9.zip"
-$ana = "$out/MiaPaxERP-Ana-v2.9.9.zip"
+$flat = "$out/MiaPaxERP-Yan-v2.9.10.zip"
+$ana = "$out/MiaPaxERP-Ana-v2.9.10.zip"
 $updateStage = Join-Path $out 'update-stage'
 New-Item -ItemType Directory -Force $updateStage | Out-Null
 foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
@@ -45,13 +45,13 @@ foreach($file in (Get-ChildItem -LiteralPath "$out/Masaustu" -Recurse -File)){
  $destination=Join-Path $updateStage $relative;New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($destination)) | Out-Null;Copy-Item -LiteralPath $file.FullName -Destination $destination
 }
 # Role-specific instructions make independently downloadable artifacts explicit; channel setting stays on the PC.
-'YAN PC 2.9.9: HTTPS ana sunucu adresi ile kullanÄ±lÄ±r. Mevcut baÄŸlantÄ± ve kanal ayarlarÄ± korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'YAN PC 2.9.10: HTTPS ana sunucu adresi ile kullanÄ±lÄ±r. Mevcut baÄŸlantÄ± ve kanal ayarlarÄ± korunur.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $flat
-'ANA PC 2.9.9: Mevcut SQL ve kanal ayarlarÄ± korunur. HTTPS Windows hizmeti gÃ¼ncellemesi iÃ§in tam Ana kurulum paketini kullanÄ±n.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
+'ANA PC 2.9.10: Mevcut SQL ve kanal ayarlarÄ± korunur. HTTPS Windows hizmeti gÃ¼ncellemesi iÃ§in tam Ana kurulum paketini kullanÄ±n.' | Set-Content "$updateStage/PAKET-ROLU.txt" -Encoding utf8
 Compress-Archive -Path "$updateStage/*" -DestinationPath $ana
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $flat -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
 & "$PSScriptRoot/validate-update-package.ps1" -Archive $ana -Desktop "$out/Masaustu/MiapaxERP.Desktop.exe"
-$freshSource = "$out/MiaPaxERP-Kaynak-v2.9.9.zip"
+$freshSource = "$out/MiaPaxERP-Kaynak-v2.9.10.zip"
 $sourceArchive = [IO.Compression.ZipFile]::Open($freshSource,[IO.Compression.ZipArchiveMode]::Create)
 try {
     foreach ($file in (Get-ChildItem -LiteralPath $source -Force -Recurse -File)) {
@@ -66,30 +66,30 @@ New-Item -ItemType Directory -Force $mobileStage | Out-Null
 Copy-Item "$source/MiapaxERP.Android/AndroidManifest.xml" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/Imzala.ps1" "$mobileStage/"
 Copy-Item "$source/MiapaxERP.Android/IMZALAMA-OKU.txt" "$mobileStage/"
-if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.9.9-imzasiz.apk")){throw 'Android build artifact missing'}
-Copy-Item "$out/android/MiaPaxERP-Mobil-v2.9.9-imzasiz.apk" "$mobileStage/"
-$signedApk="$source/MiapaxERP.Android/MiaPaxERP-Mobil-v2.9.9.apk"
+if(!(Test-Path "$out/android/MiaPaxERP-Mobil-v2.9.10-imzasiz.apk")){throw 'Android build artifact missing'}
+Copy-Item "$out/android/MiaPaxERP-Mobil-v2.9.10-imzasiz.apk" "$mobileStage/"
+$signedApk="$source/MiapaxERP.Android/MiaPaxERP-Mobil-v2.9.10.apk"
 if(!(Test-Path $signedApk)){throw "Signed Android release missing"}
 Copy-Item $signedApk "$mobileStage/"
-Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.9.9.zip"
-$assets = @($signedApk, $ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.9.9.zip", "$out/MiaPaxERP-Mobil-v2.9.9.zip", "$out/MiaPaxERP-Ana-Setup-2.9.9.exe", "$out/MiaPaxERP-Yan-Setup-2.9.9.exe")
+Compress-Archive -Path "$mobileStage/*" -DestinationPath "$out/MiaPaxERP-Mobil-v2.9.10.zip"
+$assets = @($signedApk, $ana, $flat, $freshSource, "$out/MiaPaxERP-Ana-Kurulum-v2.9.10.zip", "$out/MiaPaxERP-Mobil-v2.9.10.zip", "$out/MiaPaxERP-Ana-Setup-2.9.10.exe", "$out/MiaPaxERP-Yan-Setup-2.9.10.exe")
 $lines = foreach ($file in $assets) { $hash = Get-FileHash -LiteralPath $file -Algorithm SHA256; "$($hash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($file))" }
 $lines | Set-Content "$out/SHA256SUMS.txt" -Encoding utf8
 if ($env:GITHUB_EVENT_NAME -ne 'push' -or $env:GITHUB_REF -ne 'refs/heads/main') { Write-Host 'Packages built and checksummed; release waits for main.'; exit 0 }
 $headers = @{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28'}
 $head=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/heads/main" -Headers $headers
 if($head.object.sha -ne $env:GITHUB_SHA){Write-Host 'A newer source commit exists; this candidate will not be published.';exit 0}
-$body = @{tag_name='v2.9.9';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.9.9 — Arazi Stüdyosu (3D uydu, toprak ve hava analizi), temaya özel panolar, günlük öncelikli görevler';draft=$true;prerelease=$false;body='MiaPaxERP 2.9.9. Kroki yerine tek ekranlı Arazi Stüdyosu: adresten konum bulma, uydu üzerinde tarla, su kaynağı, boru ve ek parça çizimi, otomatik yerleşim, 3D uydu görünümü, toprak (SoilGrids), meteoroloji (Open-Meteo) ve eğim analizi, ürüne göre sulama ihtiyacı; PDF teklifte yukarıdan ve 3D uydu görüntüsü ile analiz bölümü; yapay zekâ anlatımdan projeyi hazırlar. Her tema kendine özgü gösterge panosu kullanır (Nane ekip ve istatistik, Okyanus finans akışı, Lavanta görev panosu, Gün Batımı satış vitrini, Gece üretim kontrol odası, VIP yönetici özeti, Eskitme/Klasik defter). Ana sayfada role ve takvime göre Bugün yapılacaklar (ay sonu, KDV ve muhtasar günleri, sayım, gelen mal, vadeler). Kullanıcı silme; yanlış başlatılan üretim emrini düzenleme/silme (başlatmayı geri alma); iş takviminde düzenle, sil, tamamlandı. Saha pazarlama: müşteri silme, kart güncellemeleri tarihle geçmişe ve raporlara girer. Mobil: açık ve koyu temada yazılar telefonun moduna bakılmaksızın okunur. Kurmadan önce veritabanını yedekleyin. 2.9.9 içeriği dahildir.'} | ConvertTo-Json
+$body = @{tag_name='v2.9.10';target_commitish=$env:GITHUB_SHA;name='MiaPaxERP 2.9.10 — Kroki: ada/parsel (TKGM), canlı konum, temizle; çeviri, hızlı satış ve basınç testi düzeltmeleri';draft=$true;prerelease=$false;body='MiaPaxERP 2.9.10. Arazi Stüdyosu: Temizle düğmesi (geri alınabilir), canlı konum takibi, TKGM Parsel Sorgu program içinde açılır ve indirilen KML/GeoJSON parsel sınırı krokiye otomatik aktarılır; KML/GeoJSON dosyası da açılabilir. Cam temalarında sol menü modül seçilince kapanır. Boru basınç testinde Yeni test, laboratuvar veya depo yetkisi olmayan kullanıcıda da açılır; tarih dilden bağımsız okunur ve hata mesajı hatalı alanı söyler. Hızlı satış ve SATIŞ ekranında tutarlar binlik ayıraçla gösterilir, genel toplam her değişiklikte güncellenir. Diller: tüm açık pencereler, bildirim ve öneri panelleri, menüler, yazdırılan belgeler, laboratuvar ve tablo PDF raporları ile kroki ve saha web ekranları seçili dile çevrilir; sözlüğe 195 yeni metin eklendi. Kurmadan önce veritabanını yedekleyin. 2.9.10 içeriği dahildir.'} | ConvertTo-Json
 $api = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases"
 $candidate=$null
-try{$candidate=Invoke-RestMethod -Uri "$api/tags/v2.9.9" -Headers $headers}catch{if([int]$_.Exception.Response.StatusCode -ne 404){throw}}
+try{$candidate=Invoke-RestMethod -Uri "$api/tags/v2.9.10" -Headers $headers}catch{if([int]$_.Exception.Response.StatusCode -ne 404){throw}}
 if($candidate){
  # Replace only our unannounced candidate, before enabling the signed update feeds.
  if($candidate.target_commitish -notin @('0cfe091a64ff4a65f3d46dd8d420234b9c80507b','eec2026e23f2b5453ba5e73e010e40708f7adf41') -and !($candidate.draft -and $candidate.target_commitish -eq $env:GITHUB_SHA)){throw 'Existing release is not this unannounced candidate; refusing replacement'}
- foreach($channel in @('ana','yan','mobil')){$feed=Invoke-RestMethod -Uri "https://raw.githubusercontent.com/MiaPaxERP/MiapaxERP-Updates/main/manifest-$channel.json";if($feed.Version -eq '2.9.9'){throw 'Candidate update feed already enabled; use a new version'}}
+ foreach($channel in @('ana','yan','mobil')){$feed=Invoke-RestMethod -Uri "https://raw.githubusercontent.com/MiaPaxERP/MiapaxERP-Updates/main/manifest-$channel.json";if($feed.Version -eq '2.9.10'){throw 'Candidate update feed already enabled; use a new version'}}
  Invoke-RestMethod -Method Patch -Uri "$api/$($candidate.id)" -Headers $headers -ContentType 'application/json' -Body '{"draft":true}' | Out-Null
  foreach($asset in $candidate.assets){Invoke-RestMethod -Method Delete -Uri "$api/assets/$($asset.id)" -Headers $headers | Out-Null}
- $refApi="https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/refs/tags/v2.9.9"
+ $refApi="https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/refs/tags/v2.9.10"
  $tag=Invoke-RestMethod -Uri $refApi -Headers $headers
  if($tag.object.sha -notin @('0cfe091a64ff4a65f3d46dd8d420234b9c80507b','eec2026e23f2b5453ba5e73e010e40708f7adf41') -and $tag.object.sha -ne $env:GITHUB_SHA){throw 'Candidate tag changed; refusing replacement'}
  Invoke-RestMethod -Method Patch -Uri $refApi -Headers $headers -ContentType 'application/json' -Body (@{sha=$env:GITHUB_SHA;force=$true}|ConvertTo-Json) | Out-Null

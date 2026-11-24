@@ -1,5 +1,13 @@
 # MiaPaxERP — geliştirme kaydı, 18 Kasım 2026
 
+## 2.9.10 — 24 Kasım 2026
+
+- Arazi Stüdyosu: "🧹 Temizle" (tarla, borular, analiz silinir; konum korunur; geri alınabilir); "📍 Konumum" canlı konum takibi (WebView konum izni yalnız kroki sayfasına verilir; Windows konum izni açık olmalı); "🗺 Ada / Parsel": resmî TKGM Parsel Sorgu program içinde açılır, kullanıcı sorgular, sitenin indirdiği KML/GeoJSON yakalanıp tarla sınırı olarak aktarılır (TKGM'ye program adına istek gönderilmez). "📂 Aç" KML/GeoJSON parsel dosyasını da aktarır; ada/parsel/mahalle bilgisi proje adına ve adrese yazılır.
+- Cam temalarında ince sol menü, modül seçilince kapanır (tıklanan düğmede kalan klavye odağı menüyü açık tutuyordu).
+- Boru basınç testleri: "Yeni basınç testi" cihaz (LAB.VIEW) veya parti (WAREHOUSE.VIEW) yetkisi/lisansı olmayan kullanıcıda açılmıyordu; isteğe bağlı listeler artık boş "seçilmedi" ile gelir. Tarih-saat alanı dilden bağımsız okunur (24.11.2026 14:30); doğrulama hatası hangi alanın yanlış olduğunu söyler.
+- Hızlı satış / SATIŞ: miktar, fiyat ve toplam Türkçe binlik ayıraçla (4.800,00); genel toplam her satır değişikliğinde (miktar, fiyat, KDV, ekleme, silme) güncellenir; KDV hariç tutar ve KDV ayrıca gösterilir.
+- Dil: açık tüm pencereler, açılır paneller (bildirim, öneriler), sağ tık menüleri ve ipuçları çevrilir; yazdırılan FlowDocument'ler (dış ticaret, bordro, sektör raporu, Excel ve Yazdır) çevrilir; laboratuvar/basınç raporu ve tablo PDF'leri HTML olarak çevrilir; Arazi Stüdyosu ve saha pazarlama web ekranları program diliyle gösterilir (`WebCeviri`). Web/rapor verisi sözlükte yoksa değişmez ve yapay zekâya gönderilmez (`Dil.CevirKayitsiz`). Sözlüğe 195 metin eklendi (6 dil).
+
 ## Yayımlanmamış (2.9.9 adayı) — 23 Kasım 2026
 
 - Kullanıcı silme: Kullanıcı ve Yetkiler → "🗑 Kullanıcıyı Sil". Hesap listeden kalkar, giriş yapamaz, kullanıcı adı yeniden kullanılabilir; geçmiş belgelerde adı korunur (satır fiziksel silinmez, `~silindi~` önekiyle arşivlenir). Kendi hesabınız ve son aktif yönetici silinemez. HTTPS: `YardimciEkranServisi.KullaniciSil`.

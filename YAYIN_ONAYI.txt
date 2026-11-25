@@ -1,2 +1,2 @@
-MiaPaxERP 2.9.10 yayini yayinci tarafindan onaylandi (2026-11-24).
-Imzali Android APK SHA256: a126299fec7c5194f07030d66b2de3073e7e61d7a39ea64f44ffb06a7930920d
+MiaPaxERP 2.9.11 yayini yayinci tarafindan onaylandi (2026-11-25).
+Imzali Android APK SHA256: 733d080465ffb07e015f9a7d8d0e75aab3ced72fe1b9a610221cadaa5507cad9
